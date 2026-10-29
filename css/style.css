@@ -439,6 +439,90 @@ input:focus, select:focus { outline: none; border-color: var(--acc1); box-shadow
   .tiles { grid-template-columns: repeat(3, 1fr); }
   .tile.wide { grid-column: span 1; }
 }
+
+/* ============ Badges muscles ============ */
+.mtag { display: inline-flex; align-items: center; gap: 5px; border-radius: 8px; padding: 2px 8px; font-size: 11.5px; font-weight: 700; border: 1px solid transparent; }
+.mtag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.m-dos { color: #22b8d6; background: rgba(34, 211, 238, .12); border-color: rgba(34, 211, 238, .25); }
+.m-pecs { color: #8f7bff; background: rgba(124, 92, 255, .13); border-color: rgba(124, 92, 255, .28); }
+.m-epaules { color: #e9a23b; background: rgba(255, 181, 71, .13); border-color: rgba(255, 181, 71, .28); }
+.m-bras { color: #f0609a; background: rgba(240, 96, 154, .12); border-color: rgba(240, 96, 154, .26); }
+.m-jambes { color: #23b37f; background: rgba(52, 211, 153, .12); border-color: rgba(52, 211, 153, .26); }
+.m-core { color: #ff7a52; background: rgba(255, 122, 82, .12); border-color: rgba(255, 122, 82, .26); }
+
+/* Validation impossible tant que charge et reps sont vides */
+.tick.need { opacity: .38; border-style: dashed; }
+.shake { animation: shake .45s; }
+.shake input:placeholder-shown { border-color: var(--bad); box-shadow: 0 0 0 3px color-mix(in srgb, var(--bad) 18%, transparent); }
+
+/* Objectif de pas */
+.steps-goal { margin: 2px 0 10px; }
+.sg-h { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: 12.5px; margin-bottom: 6px; color: var(--ink2); }
+.bar.mini { height: 5px; flex: none; margin: 6px 0 2px; }
+
+/* ============ Semaine / Mois ============ */
+.modes { display: flex; gap: 4px; padding: 4px; border-radius: 16px; background: var(--card); border: 1px solid var(--line2); margin-bottom: 14px; max-width: 460px; }
+.modes button { flex: 1; min-height: 40px; border: 0; border-radius: 12px; background: none; font-weight: 650; font-size: 13.5px; color: var(--muted); transition: all .3s var(--ease); }
+.modes button.on { background: var(--grad); color: var(--on-acc); box-shadow: 0 6px 16px color-mix(in srgb, var(--acc1) 35%, transparent); }
+.cal-nav { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.cal-t { flex: 1; text-align: center; }
+.cal-t h2 { font-family: var(--display); font-size: 21px; margin: 2px 0 0; text-transform: capitalize; }
+.tiles.sum .t-v { font-size: 24px; }
+.week-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.wday {
+  text-align: left; display: flex; flex-direction: column; gap: 5px; padding: 12px; border-radius: 18px; background: var(--card);
+  border: 1px solid var(--line); box-shadow: var(--shadow); transition: transform .2s var(--ease), border-color .3s;
+}
+.wday:active { transform: scale(.97); }
+.wday.is-today { border-color: var(--acc1); box-shadow: 0 0 0 3px var(--acc-soft), var(--shadow); }
+.wd-h { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.wd-d { text-transform: capitalize; color: var(--muted); font-size: 12.5px; font-weight: 600; }
+.wd-d b { font-family: var(--display); font-size: 18px; color: var(--ink); margin-left: 2px; }
+.wd-s { font-weight: 700; font-size: 13.5px; }
+.wd-l { font-size: 12px; color: var(--ink2); font-variant-numeric: tabular-nums; }
+.wd-l.ok { color: var(--good); font-weight: 600; }
+.spill { font-size: 10.5px; font-weight: 800; letter-spacing: .04em; padding: 2px 8px; border-radius: 99px; background: var(--field); color: var(--muted); text-transform: uppercase; }
+.st-done .spill { background: var(--good-soft); color: var(--good); }
+.st-partial .spill { background: var(--acc-soft); color: var(--accent); }
+.st-missed .spill { background: color-mix(in srgb, var(--bad) 14%, transparent); color: var(--bad); }
+.wday.st-done { border-color: color-mix(in srgb, var(--good) 35%, transparent); }
+.dots { display: flex; gap: 4px; margin-top: 2px; }
+.dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--line2); }
+.dots i.on { background: var(--good); }
+
+.month { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+.mh { text-align: center; font-size: 11px; font-weight: 700; color: var(--muted); padding-bottom: 4px; }
+.mc {
+  position: relative; aspect-ratio: 1 / 1.05; min-height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--card2);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 3px; transition: transform .2s var(--ease);
+}
+.mc:active { transform: scale(.92); }
+.mc.out { opacity: .35; }
+.mc-n { font-family: var(--display); font-weight: 700; font-size: 13px; }
+.mc-i { font-size: 13px; line-height: 1; min-height: 13px; }
+.mc-b { position: absolute; left: 6px; right: 6px; bottom: 4px; height: 3px; border-radius: 3px; background: var(--line2); overflow: hidden; }
+.mc-b i { display: block; height: 100%; background: var(--good); }
+.mc.st-done { background: var(--good-soft); border-color: color-mix(in srgb, var(--good) 45%, transparent); }
+.mc.st-partial { background: var(--acc-soft); border-color: color-mix(in srgb, var(--acc1) 45%, transparent); }
+.mc.st-missed { border-color: color-mix(in srgb, var(--bad) 45%, transparent); border-style: dashed; }
+.mc.is-today { box-shadow: 0 0 0 2px var(--acc1); }
+.mleg { margin-top: 12px; flex-wrap: wrap; }
+.lg { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; border: 1px solid var(--line2); }
+.lg.done { background: var(--good); } .lg.partial { background: var(--acc1); } .lg.missed { border: 1px dashed var(--bad); } .lg.todo { background: var(--card2); }
+
+@media (min-width: 700px) {
+  .week-grid { grid-template-columns: repeat(4, 1fr); }
+  .tiles.sum { grid-template-columns: repeat(5, 1fr); }
+}
+@media (min-width: 1000px) {
+  .week-grid { grid-template-columns: repeat(7, 1fr); }
+  .page-cal .month { gap: 8px; }
+  .page-cal .mc { aspect-ratio: auto; min-height: 92px; align-items: flex-start; justify-content: flex-start; padding: 8px 10px; }
+  .page-cal .mc-n { font-size: 16px; } .page-cal .mc-i { font-size: 18px; margin-top: 6px; }
+  .page-plan > .a-modes { grid-column: 1 / -1; }
+  .page-plan > .card:nth-child(3) { margin-top: 0; }
+}
+
 /* ============ Ordinateur : pleine largeur ============ */
 @media (min-width: 1000px) {
   body { padding: 0 0 32px 104px; }
@@ -460,8 +544,7 @@ input:focus, select:focus { outline: none; border-color: var(--acc1); box-shadow
 
   .page-plan { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(320px, 1fr); gap: 0 24px; align-items: start; }
   .page-plan > .a-main { grid-row: span 3; margin-top: 0; }
-  .page-plan > .card:nth-child(2) { margin-top: 0; }
-  .pdays { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .pdays { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
   .pd { grid-template-columns: 1fr; gap: 4px; }
   .weeks { grid-template-columns: repeat(15, 1fr); }
 
@@ -482,3 +565,4 @@ input:focus, select:focus { outline: none; border-color: var(--acc1); box-shadow
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+.cal-t h2.nocap { text-transform: none; }

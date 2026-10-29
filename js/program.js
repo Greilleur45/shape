@@ -254,3 +254,33 @@ export const RULES = [
   ['Échauffement', '5 min de marche rapide avant chaque footing ; 2 séries légères avant le 1er exercice de chaque séance.'],
   ['Progression', 'Quand tu atteins le haut de la fourchette de reps sur toutes les séries, augmente la charge la fois suivante.'],
 ];
+
+// Muscle principal visé par exercice (badge affiché sur chaque carte)
+export const MUSCLES = {
+  'tirage-vert-neutre': 'Dos · largeur', 'tirage-vert-large': 'Dos · largeur', 'tirage-vert-serre': 'Dos · largeur',
+  'tirage-unilat': 'Dos · largeur', 'tractions': 'Dos · largeur', 'pullover-poulie': 'Dos · grand dorsal',
+  'rowing-appuye': 'Dos · épaisseur', 'tirage-poulie-basse': 'Dos · épaisseur', 'rowing-machine-neutre': 'Dos · épaisseur',
+  'dev-incl-halteres': 'Pecs · haut', 'ecartes-poulie-bh': 'Pecs · haut', 'presse-incl-conv': 'Pecs · haut',
+  'presse-convergente': 'Pecs', 'pec-deck': 'Pecs', 'dips-assistes': 'Pecs · triceps',
+  'elev-lat-halteres': 'Épaules · latéral', 'elev-lat-poulie': 'Épaules · latéral',
+  'dev-epaules-halt': 'Épaules · avant', 'dev-epaules-machine': 'Épaules · avant',
+  'face-pull': 'Épaules · arrière', 'oiseau-machine': 'Épaules · arrière',
+  'curl-incline': 'Biceps', 'curl-poulie': 'Biceps', 'curl-21': 'Biceps', 'curl-marteau': 'Biceps · avant-bras',
+  'triceps-corde': 'Triceps', 'triceps-overhead': 'Triceps · chef long',
+  'leg-ext': 'Quadriceps', 'leg-ext-finisher': 'Quadriceps', 'presse': 'Quadriceps · fessiers',
+  'fentes-bulgares': 'Quadriceps · fessiers', 'fentes-arriere': 'Fessiers · quadriceps',
+  'leg-curl-assis': 'Ischios', 'leg-curl-allonge': 'Ischios',
+  'hip-thrust': 'Fessiers', 'abducteurs': 'Fessiers · moyen', 'extension-45': 'Fessiers · lombaires',
+  'mollets-debout': 'Mollets', 'mollets-assis': 'Mollets · soléaire',
+  'crunch-poulie': 'Abdos', 'crunch-machine': 'Abdos', 'releves-genoux': 'Abdos · bas', 'releves-jambes': 'Abdos · bas',
+  'geante-abdos': 'Abdos · obliques', 'geante-obliques': 'Obliques', 'pallof': 'Obliques · gainage',
+  'mcgill': 'Gainage · lombaires',
+};
+
+// Objectif de pas : 10 000 de base + les pas de la course prévue (≈ 160 pas/min, téléphone en poche)
+export const STEPS_BASE = 10000;
+export function stepsGoal(type, week) {
+  if (!type?.startsWith('RUN') || !week) return { goal: STEPS_BASE, run: 0 };
+  const run = Math.round((runFor(type, week).minutes * 160) / 500) * 500;
+  return { goal: STEPS_BASE + run, run };
+}

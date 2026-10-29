@@ -1,6 +1,6 @@
 // Cache de l'appli pour fonctionner hors ligne (au fond de la salle).
 // Stale-while-revalidate : on sert le cache tout de suite et on met à jour en arrière-plan.
-const CACHE = 'shape-v3';
+const CACHE = 'shape-v4';
 const SHELL = ['./', 'index.html', 'css/style.css', 'js/app.js', 'js/program.js', 'js/store.js', 'js/sync.js',
   'js/charts.js', 'vendor/qrcode.js', 'manifest.webmanifest', 'icons/icon.svg', 'icons/icon-180.png', 'icons/icon-192.png'];
 

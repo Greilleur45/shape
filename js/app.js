@@ -37,7 +37,8 @@ const QUOTES = [
   'Hydrate, dors, répète.',
 ];
 
-const state = { tab: 'today', date: today(), planWeek: null, statEx: null, showMeas: false, showQR: false, pop: null };
+const state = { tab: 'today', date: today(), planWeek: null, statEx: null, showMeas: false, showQR: false, pop: null,
+  planMode: 'week', calWeek: null, calMonth: null };
 const meters = new Map();
 
 function longDate(s) { const d = P.parseDate(s); return `${DAYS[P.isoDow(s) - 1]} ${d.getDate()} ${MONTHS[d.getMonth()]}`; }
@@ -236,6 +237,13 @@ function renderWorkout(date, w, day) {
     <button class="btn ${day.done ? 'done' : 'primary'} full finish" data-act="toggle-done">${day.done ? `${I.check.replace('<svg', '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="3"')} Séance terminée` : 'Terminer la séance'}</button>`;
 }
 
+const MUSCLE_CAT = { Dos: 'dos', Pecs: 'pecs', 'Épaules': 'epaules', Biceps: 'bras', Triceps: 'bras',
+  Quadriceps: 'jambes', Ischios: 'jambes', Fessiers: 'jambes', Mollets: 'jambes', Abdos: 'core', Obliques: 'core', Gainage: 'core' };
+function muscleTag(id) {
+  const m = P.MUSCLES[id];
+  return m ? `<span class="mtag m-${MUSCLE_CAT[m.split(' ')[0]] || 'core'}">${esc(m)}</span>` : '';
+}
+
 function renderExercise(date, it, label) {
   const key = `${date}|${it.id}`;
   const rec = store.get('ex', key) || {};
@@ -249,7 +257,7 @@ function renderExercise(date, it, label) {
       <span class="ex-i">${complete ? I.check.replace('<svg', '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"') : label}</span>
       <span class="ex-n">${esc(it.name)}</span>
     </div>
-    <div class="ex-m"><span class="tag">${it.sets} × ${esc(it.reps)}</span>${rest ? `<span class="tag">⏱ ${rest}</span>` : ''}
+    <div class="ex-m">${muscleTag(it.id)}<span class="tag">${it.sets} × ${esc(it.reps)}</span>${rest ? `<span class="tag">⏱ ${rest}</span>` : ''}
       ${tech ? `<button class="badge" data-act="tech">${tech.label} ⓘ</button>` : ''}</div>
     <div class="tech-d" hidden>${tech ? esc(tech.desc) : ''}</div>
     ${it.cue ? `<div class="cue">💡 ${esc(it.cue)}</div>` : ''}`;
@@ -281,7 +289,7 @@ function renderExercise(date, it, label) {
         <input class="w" inputmode="decimal" data-ex="${it.id}" data-i="${i}" data-f="w" value="${s.w ?? ''}" placeholder="${ls.w ?? 'kg'}">
         <span class="x">×</span>
         <input class="r" inputmode="numeric" data-ex="${it.id}" data-i="${i}" data-f="r" value="${s.r ?? ''}" placeholder="${ls.r ?? esc(it.reps.split(/[-\/ ]/)[0])}">
-        <button class="tick ${s.ok ? 'on' : ''}" data-act="ok" data-ex="${it.id}" data-i="${i}" data-pop="s|${it.id}|${i}" aria-label="Série faite">${I.check}</button>
+        <button class="tick ${s.ok ? 'on' : s.w != null && s.r != null ? '' : 'need'}" data-act="ok" data-ex="${it.id}" data-i="${i}" data-pop="s|${it.id}|${i}" aria-label="Série faite">${I.check}</button>
       </div>${drops}`;
   }).join('');
 
@@ -342,6 +350,8 @@ function renderRun(date, type, week) {
 
 function renderDaily(date, d) {
   const checks = d.checks || {};
+  const sg = P.stepsGoal(sessionTypeFor(date), P.weekOf(date));
+  const sp = Math.min(1, (num(d.steps) || 0) / sg.goal);
   const score = P.NUTRITION.filter(n => checks[n.id]).length;
   const box = `<span class="box">${I.check}</span>`;
   return `
@@ -349,8 +359,12 @@ function renderDaily(date, d) {
     <div class="card-h"><h2>Journal du jour</h2><span class="nutri-score ${score === 5 ? 'full' : ''}">${score}/5</span></div>
     <div class="grid3">
       <div class="field"><label>Poids kg</label><input inputmode="decimal" data-day="weight" value="${d.weight ?? ''}" placeholder="70.0"></div>
-      <div class="field"><label>Pas</label><input inputmode="numeric" data-day="steps" value="${d.steps ?? ''}" placeholder="10000"></div>
+      <div class="field"><label>Pas</label><input inputmode="numeric" data-day="steps" value="${d.steps ?? ''}" placeholder="${sg.goal}"></div>
       <div class="field"><label>Sommeil h</label><input inputmode="decimal" data-day="sleep" value="${d.sleep ?? ''}" placeholder="7.5"></div>
+    </div>
+    <div class="steps-goal">
+      <div class="sg-h"><span>👟 Objectif du jour <b>${sg.goal.toLocaleString('fr-FR')} pas</b></span><span class="muted">${sg.run ? `10 000 + ${sg.run.toLocaleString('fr-FR')} de course` : 'marche'}</span></div>
+      <div class="bar ${sp >= 1 ? 'good' : ''}"><i data-meter="steps" data-goal="${sg.goal}" data-p="${sp}"></i></div>
     </div>
     <div class="field"><label>Énergie</label><div class="seg">${[1, 2, 3, 4, 5].map(v =>
       `<button class="${d.energy === v ? 'on' : ''}" data-act="energy" data-v="${v}">${['😫', '😕', '😐', '🙂', '🔥'][v - 1]}</button>`).join('')}</div></div>
@@ -375,7 +389,125 @@ function renderMeasures(date) {
 
 // ---------- Vue Programme ----------
 const PH_COLORS = { 1: '#22d3ee', 2: '#7c5cff', 3: '#ff4f6d' };
+function dayStatus(d) {
+  const type = sessionTypeFor(d), past = d < today();
+  if (isWorkout(type)) {
+    const sp = sessionProgress(d, type), day = store.get('days', d);
+    const pct = day?.done ? 1 : sp.total ? sp.done / sp.total : 0;
+    return { type, ico: '🏋️', label: P.SESSION_TYPES[type], pct, state: pct >= 1 ? 'done' : pct > 0 ? 'partial' : past ? 'missed' : 'todo' };
+  }
+  if (type?.startsWith('RUN')) {
+    const r = store.get('runs', d), plan = P.runFor(type, clampWeek(d));
+    return { type, ico: '🏃', label: `${plan.name} ${plan.minutes}'`, planned: plan.minutes, run: r, pct: r?.done ? 1 : 0, state: r?.done ? 'done' : past ? 'missed' : 'todo' };
+  }
+  return { type, ico: '🌿', label: type === 'REST' ? 'Repos' : 'Libre', pct: 0, state: 'rest' };
+}
+const STATE_TXT = { done: 'Fait', partial: 'En cours', missed: 'Manqué', todo: 'À venir', rest: 'Repos' };
+const mondayOf = d => P.addDays(d, 1 - P.isoDow(d));
+
+function periodSummary(dates) {
+  const st = dates.map(d => ({ d, s: dayStatus(d) }));
+  const wk = st.filter(x => isWorkout(x.s.type)), runs = st.filter(x => x.s.type?.startsWith('RUN'));
+  const days = dates.map(d => store.get('days', d)).filter(Boolean);
+  const w = days.map(x => num(x.weight)).filter(v => v != null);
+  const steps = dates.map(d => ({ d, v: num(store.get('days', d)?.steps) })).filter(x => x.v != null);
+  const stepsHit = steps.filter(x => x.v >= P.stepsGoal(sessionTypeFor(x.d), P.weekOf(x.d)).goal).length;
+  const nut = days.length ? Math.round(100 * days.reduce((a, x) => a + P.NUTRITION.filter(n => x.checks?.[n.id]).length, 0) / (days.length * 5)) : null;
+  return {
+    wDone: wk.filter(x => x.s.state === 'done').length, wTotal: wk.length,
+    runMin: runs.reduce((a, x) => a + (num(x.s.run?.min) || (x.s.run?.done ? x.s.planned : 0)), 0), runPlanned: runs.reduce((a, x) => a + x.s.planned, 0),
+    km: dates.reduce((a, d) => a + (num(store.get('runs', d)?.km) || 0), 0),
+    wAvg: w.length ? w.reduce((a, v) => a + v, 0) / w.length : null,
+    stepsAvg: steps.length ? Math.round(steps.reduce((a, x) => a + x.v, 0) / steps.length) : null, stepsHit, stepsN: steps.length, nut,
+  };
+}
+function summaryTiles(s, prev) {
+  const dw = s.wAvg != null && prev?.wAvg != null ? s.wAvg - prev.wAvg : null;
+  const t = (ico, l, v, sub, cls = '') => `<div class="tile"><div class="t-ico">${ico}</div><div class="t-l">${l}</div><div class="t-v">${v}</div><div class="t-s ${cls}">${sub}</div></div>`;
+  return `<div class="tiles sum">
+    ${t('🏋️', 'Muscu', `${s.wDone}/${s.wTotal}`, 'séances faites')}
+    ${t('🏃', 'Course', `${s.runMin}'`, `sur ${s.runPlanned}' prévues${s.km ? ` · ${s.km.toFixed(1)} km` : ''}`)}
+    ${t('⚖️', 'Poids moyen', s.wAvg != null ? `${s.wAvg.toFixed(1)} kg` : '—', dw != null ? `${dw > 0 ? '▲ +' : '▼ '}${dw.toFixed(1)} kg vs période préc.` : s.wAvg != null ? 'moyenne des pesées' : 'aucune pesée', dw != null ? (dw > 0 ? 'up' : 'down') : '')}
+    ${t('👟', 'Pas moyens', s.stepsAvg != null ? s.stepsAvg.toLocaleString('fr-FR') : '—', s.stepsN ? `objectif atteint ${s.stepsHit}/${s.stepsN} j` : 'aucun relevé')}
+    ${t('🥗', 'Nutrition', s.nut != null ? `${s.nut} %` : '—', 'des cases cochées')}
+  </div>`;
+}
+function modeSwitch() {
+  return `<div class="modes">${[['week', 'Semaine'], ['month', 'Mois'], ['plan', '15 semaines']].map(([m, l]) =>
+    `<button class="${state.planMode === m ? 'on' : ''}" data-act="plan-mode" data-m="${m}">${l}</button>`).join('')}</div>`;
+}
+
+function renderWeekView() {
+  const mon = state.calWeek || mondayOf(today()), sun = P.addDays(mon, 6);
+  const dates = Array.from({ length: 7 }, (_, i) => P.addDays(mon, i));
+  const s = periodSummary(dates), prev = periodSummary(dates.map(d => P.addDays(d, -7)));
+  const wk = P.weekOf(mon), ph = wk && P.phaseOf(wk);
+  const cards = dates.map((d, i) => {
+    const st = dayStatus(d), day = store.get('days', d) || {}, r = store.get('runs', d);
+    const sg = P.stepsGoal(st.type, P.weekOf(d)), steps = num(day.steps);
+    const score = P.NUTRITION.filter(n => day.checks?.[n.id]).length;
+    return `<button class="wday st-${st.state} ${d === today() ? 'is-today' : ''}" data-act="open-day" data-date="${d}">
+      <div class="wd-h"><span class="wd-d">${DAYS[i].slice(0, 3)} <b>${P.parseDate(d).getDate()}</b></span><span class="spill">${STATE_TXT[st.state]}</span></div>
+      <div class="wd-s">${st.ico} ${esc(st.label)}</div>
+      ${isWorkout(st.type) ? `<div class="bar mini ${st.pct >= 1 ? 'good' : ''}"><i style="width:${st.pct * 100}%"></i></div>` : ''}
+      ${r && (r.min || r.km) ? `<div class="wd-l">⏱ ${r.min ?? '–'}' · ${r.km ?? '–'} km</div>` : ''}
+      <div class="wd-l">⚖️ ${day.weight ?? '—'}</div>
+      <div class="wd-l ${steps != null && steps >= sg.goal ? 'ok' : ''}">👟 ${steps != null ? `${(steps / 1000).toFixed(1)}k` : '—'} / ${sg.goal / 1000}k</div>
+      <div class="dots">${P.NUTRITION.map((_, k) => `<i class="${k < score ? 'on' : ''}"></i>`).join('')}</div>
+    </button>`;
+  }).join('');
+  const SHORT = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+  const f = d => `${P.parseDate(d).getDate()} ${SHORT[P.parseDate(d).getMonth()]}`;
+  return `
+    <div class="cal-nav">
+      <button class="icon" data-act="cal-prev" aria-label="Semaine précédente">${I.left}</button>
+      <div class="cal-t"><span class="eyebrow">${wk ? `S${wk}/15 · ${ph.name}` : 'Hors programme'}</span><h2 class="nocap">${f(mon)} → ${f(sun)}</h2></div>
+      <button class="icon" data-act="cal-next" aria-label="Semaine suivante">${I.right}</button>
+    </div>
+    ${mon !== mondayOf(today()) ? '<button class="link today-link" data-act="cal-today">↩ Cette semaine</button>' : ''}
+    ${summaryTiles(s, prev)}
+    <div class="week-grid">${cards}</div>`;
+}
+
+function renderMonthView() {
+  const ym = state.calMonth || today().slice(0, 7);
+  const [y, m] = ym.split('-').map(Number);
+  const first = `${ym}-01`, nDays = new Date(y, m, 0).getDate();
+  const dates = Array.from({ length: nDays }, (_, i) => `${ym}-${String(i + 1).padStart(2, '0')}`);
+  const pm = m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, '0')}`;
+  const pn = new Date(y, m - 1, 0).getDate();
+  const s = periodSummary(dates), prev = periodSummary(Array.from({ length: pn }, (_, i) => `${pm}-${String(i + 1).padStart(2, '0')}`));
+  const start = mondayOf(first);
+  const cells = Array.from({ length: Math.ceil((P.daysBetween(start, first) + nDays) / 7) * 7 }, (_, i) => P.addDays(start, i)).map(d => {
+    const inM = d.startsWith(ym), st = dayStatus(d), day = store.get('days', d) || {};
+    const score = P.NUTRITION.filter(n => day.checks?.[n.id]).length;
+    const inProg = !!P.weekOf(d);
+    return `<button class="mc st-${inProg ? st.state : 'none'} ${inM ? '' : 'out'} ${d === today() ? 'is-today' : ''}" data-act="open-day" data-date="${d}">
+      <span class="mc-n">${P.parseDate(d).getDate()}</span>
+      <span class="mc-i">${inProg ? st.ico : ''}</span>
+      ${inProg && score ? `<span class="mc-b"><i style="width:${score * 20}%"></i></span>` : ''}
+    </button>`;
+  }).join('');
+  return `
+    <div class="cal-nav">
+      <button class="icon" data-act="cal-prev" aria-label="Mois précédent">${I.left}</button>
+      <div class="cal-t"><span class="eyebrow">${y}</span><h2>${MONTHS[m - 1]}</h2></div>
+      <button class="icon" data-act="cal-next" aria-label="Mois suivant">${I.right}</button>
+    </div>
+    ${summaryTiles(s, prev)}
+    <section class="card">
+      <div class="month">${['L', 'M', 'M', 'J', 'V', 'S', 'D'].map(x => `<span class="mh">${x}</span>`).join('')}${cells}</div>
+      <div class="legend mleg"><span><i class="lg done"></i>Fait</span><span><i class="lg partial"></i>En cours</span><span><i class="lg missed"></i>Manqué</span><span><i class="lg todo"></i>À venir</span></div>
+    </section>`;
+}
+
 function renderPlan() {
+  if (state.planMode === 'week') return `<div class="page page-cal">${modeSwitch()}${renderWeekView()}</div>`;
+  if (state.planMode === 'month') return `<div class="page page-cal">${modeSwitch()}${renderMonthView()}</div>`;
+  return renderPlanFull();
+}
+
+function renderPlanFull() {
   const cur = P.weekOf(today());
   const wk = state.planWeek || cur || 1;
   const phase = P.phaseOf(wk);
@@ -396,6 +528,7 @@ function renderPlan() {
     `<button class="wk ${n === wk ? 'on' : ''} ${n === cur ? 'cur' : ''} ph${P.phaseOf(n).bloc}" data-act="week" data-w="${n}">S${n}</button>`).join('');
 
   return `<div class="page page-plan">
+  <div class="a-modes">${modeSwitch()}</div>
   <section class="card a-main">
     <div class="card-h"><h2>15 semaines</h2><span class="muted">7 déc → 21 mars</span></div>
     <div class="weeks">${weeks}</div>
@@ -595,7 +728,13 @@ function dayPatch(fields) { store.patch('days', state.date, fields); }
 
 document.addEventListener('input', e => {
   const t = e.target, ds = t.dataset;
-  if (ds.day) dayPatch({ [ds.day]: ds.day === 'note' ? t.value : num(t.value) });
+  if (ds.day) {
+    dayPatch({ [ds.day]: ds.day === 'note' ? t.value : num(t.value) });
+    if (ds.day === 'steps') {
+      const bar = document.querySelector('[data-meter="steps"]'), g = +bar?.dataset.goal;
+      if (bar) { const p = Math.min(1, (num(t.value) || 0) / g); bar.style.width = `${p * 100}%`; meters.set('steps', p); bar.parentElement.classList.toggle('good', p >= 1); }
+    }
+  }
   else if (ds.run) store.patch('runs', state.date, { [ds.run]: ds.run === 'note' ? t.value : num(t.value) });
   else if (ds.meas) store.patch('measures', state.date, { [ds.meas]: num(t.value) });
   else if (ds.ex && ds.f === 'note') { const { k, r } = exRec(ds.ex); r.note = t.value; store.patch('ex', k, r); }
@@ -605,7 +744,11 @@ document.addEventListener('input', e => {
     const i = +ds.i;
     r.sets[i] ||= {};
     if (ds.j != null) { r.sets[i].drops ||= []; r.sets[i].drops[+ds.j][ds.f] = num(t.value); }
-    else r.sets[i][ds.f] = num(t.value);
+    else {
+      r.sets[i][ds.f] = num(t.value);
+      const row = t.closest('.set'), tick = row?.querySelector('.tick');
+      if (tick && !tick.classList.contains('on')) tick.classList.toggle('need', !(num(row.querySelector('.w').value) != null && num(row.querySelector('.r').value) != null));
+    }
     for (let n = 0; n < r.sets.length; n++) r.sets[n] ||= {};
     store.patch('ex', k, r);
   }
@@ -661,6 +804,17 @@ document.addEventListener('click', e => {
     case 'goto-start': return go(() => P.START, 'from-right');
     case 'open-day': state.date = ds.date; state.tab = 'today'; window.scrollTo(0, 0); return render({ anim: true });
     case 'week': state.planWeek = +ds.w; break;
+    case 'plan-mode': state.planMode = ds.m; return render({ anim: true });
+    case 'cal-prev': case 'cal-next': {
+      const k = a === 'cal-next' ? 1 : -1;
+      if (state.planMode === 'week') state.calWeek = P.addDays(state.calWeek || mondayOf(today()), 7 * k);
+      else {
+        const [y, m] = (state.calMonth || today().slice(0, 7)).split('-').map(Number), d = new Date(y, m - 1 + k, 1);
+        state.calMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      }
+      return render({ anim: true, dir: k > 0 ? 'from-right' : 'from-left' });
+    }
+    case 'cal-today': state.calWeek = null; return render({ anim: true });
     case 'show-meas': state.showMeas = true; break;
     case 'tech': { const d = b.closest('.ex').querySelector('.tech-d'); d.hidden = !d.hidden; return; }
     case 'ok': {
@@ -668,10 +822,13 @@ document.addEventListener('click', e => {
       const { k, r } = exRec(ds.ex); r.sets ||= [];
       const i = +ds.i; const s = (r.sets[i] ||= {});
       for (let n = 0; n < r.sets.length; n++) r.sets[n] ||= {};
-      const row = b.closest('.set');
-      const w = row.querySelector('.w'), rp = row.querySelector('.r');
-      if (s.w == null && num(w.placeholder) != null) s.w = num(w.placeholder);
-      if (s.r == null && num(rp.placeholder) != null) s.r = num(rp.placeholder);
+      if (!s.ok && (s.w == null || s.r == null)) {
+        const row = b.closest('.set');
+        row.classList.remove('shake'); void row.offsetWidth; row.classList.add('shake');
+        (s.w == null ? row.querySelector('.w') : row.querySelector('.r')).focus();
+        buzz([40, 40, 40]); toast('Renseigne la charge et les reps avant de valider');
+        return;
+      }
       s.ok = !s.ok;
       store.patch('ex', k, r);
       if (s.ok) {
