@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Shape</title>
-<meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)">
-<meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#090a0f" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f4f5fa" media="(prefers-color-scheme: light)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -14,28 +14,55 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap">
 <link rel="stylesheet" href="css/style.css">
 <script src="vendor/qrcode.js" defer></script>
 <script type="module" src="js/app.js"></script>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="g-acc" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" style="stop-color:var(--acc1)"/><stop offset="1" style="stop-color:var(--acc2)"/>
+    </linearGradient>
+    <linearGradient id="g-area" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" style="stop-color:var(--acc1)" stop-opacity=".28"/><stop offset="1" style="stop-color:var(--acc1)" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+</svg>
+<div class="glow" aria-hidden="true"></div>
 <header>
-  <span class="logo">SHAPE</span>
-  <button id="syncdot" class="dot off" aria-label="État de la synchronisation"></button>
+  <div class="brand">
+    <span class="logo-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M4 15l5-5 4 4 7-7" fill="none" stroke="url(#g-acc)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </span>
+    <span class="logo">SHAPE</span>
+  </div>
+  <button id="sync" class="sync s-off" aria-label="État de la synchronisation"><i></i><span>Hors synchro</span></button>
 </header>
+<div id="progress" hidden><i></i></div>
 <main id="view"></main>
 <div id="timer" hidden>
+  <svg class="t-ring" viewBox="0 0 44 44"><circle cx="22" cy="22" r="19" class="t-bg"/><circle cx="22" cy="22" r="19" class="t-fg" pathLength="100"/></svg>
+  <div class="t-main"><small>Repos</small><span id="timer-t">0:00</span></div>
   <button data-t="-15">−15</button>
-  <span id="timer-t">0:00</span>
   <button data-t="15">+15</button>
   <button data-t="skip" aria-label="Arrêter">✕</button>
 </div>
 <div id="toast" hidden></div>
+<canvas id="confetti" aria-hidden="true"></canvas>
 <nav>
-  <button data-tab="today"><span>🏋️</span>Aujourd'hui</button>
-  <button data-tab="plan"><span>🗓️</span>Programme</button>
-  <button data-tab="stats"><span>📈</span>Stats</button>
-  <button data-tab="settings"><span>⚙️</span>Réglages</button>
+  <span class="nav-ind" aria-hidden="true"></span>
+  <button data-tab="today">
+    <svg viewBox="0 0 24 24"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>Séance</button>
+  <button data-tab="plan">
+    <svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Programme</button>
+  <button data-tab="stats">
+    <svg viewBox="0 0 24 24"><path d="M4 19h16M6 15l4-5 3.5 3L19 6"/></svg>Progrès</button>
+  <button data-tab="settings">
+    <svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Réglages</button>
 </nav>
 </body>
 </html>

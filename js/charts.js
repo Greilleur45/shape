@@ -44,8 +44,11 @@ export function lineChart({ points, line, target, unit = '', decimals = 1 }) {
     : '';
   const dots = points.map(p => `<circle class="${line ? 'dot-muted' : 'dot'}" cx="${X(p.date)}" cy="${Y(p.y)}" r="${line ? 3 : 4}"/>`).join('');
   const main = line || points;
+  const d = main.map((p, i) => `${i ? 'L' : 'M'}${X(p.date).toFixed(1)},${Y(p.y).toFixed(1)}`).join('');
+  const base = (H - PAD.b).toFixed(1);
   const path = main.length > 1
-    ? `<path class="line" d="${main.map((p, i) => `${i ? 'L' : 'M'}${X(p.date).toFixed(1)},${Y(p.y).toFixed(1)}`).join('')}"/>` : '';
+    ? `<path class="area" d="${d}L${X(main.at(-1).date).toFixed(1)},${base}L${X(main[0].date).toFixed(1)},${base}Z"/>` +
+      `<path class="line" pathLength="1" d="${d}"/>` : '';
   const ends = main.length ? `<circle class="dot" cx="${X(main.at(-1).date)}" cy="${Y(main.at(-1).y)}" r="4.5"/>` : '';
 
   const tipData = (line || points).map(p => {
@@ -53,7 +56,7 @@ export function lineChart({ points, line, target, unit = '', decimals = 1 }) {
     return { x: X(p.date), y: Y(p.y), t: `${fmtShort(p.date)} · ${p.y.toFixed(decimals)}${unit}` + (raw ? ` (pesée ${raw.y.toFixed(1)})` : '') };
   });
   return `<div class="chart" data-tips='${JSON.stringify(tipData).replace(/'/g, '&#39;')}'>
-    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img">${grid}${tgt}${xl}${dots}${path}${ends}
+    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img">${grid}${tgt}${xl}${path}${dots}${ends}
       <line class="cross" x1="0" x2="0" y1="${PAD.t}" y2="${H - PAD.b}" style="display:none"/></svg>
     <div class="tip" hidden></div></div>`;
 }
