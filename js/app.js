@@ -1020,7 +1020,18 @@ renderSync();
 let lastToday = today();
 setInterval(() => { const t = today(); if (t !== lastToday) { if (state.date === lastToday) { state.date = t; render(); } lastToday = t; } }, 60000);
 
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+// Mise à jour automatique : dès qu'une nouvelle version est publiée, l'appli se recharge toute seule
+if ('serviceWorker' in navigator) {
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloaded = false;
+  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
+    reg.update();
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reg.update(); });
+  });
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (hadController && !reloaded) { reloaded = true; location.reload(); }
+  });
+}
 // Met en cache toutes les photos d'exercices pour qu'elles marchent hors ligne à la salle
 if ('caches' in window && navigator.onLine) {
   setTimeout(() => caches.open('shape-img-v1').then(async c => {
