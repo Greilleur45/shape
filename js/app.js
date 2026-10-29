@@ -337,7 +337,7 @@ function renderSettings() {
   }
   return `
   <section class="card">
-    <div class="card-h"><h2>Synchronisation</h2><span class="sync-st ${st.state}">${esc(stTxt)}</span></div>
+    <div class="card-h"><h2>Synchronisation</h2><span class="sync-st st-${st.state}">${esc(stTxt)}</span></div>
     ${st.last ? `<p class="muted">Dernière synchro : ${new Date(st.last).toLocaleString('fr-FR')}</p>` : ''}
     <div class="grid2">
       <div class="field"><label>Compte GitHub</label><input id="cfg-owner" value="${esc(cfg?.owner || 'Greilleur45')}" autocapitalize="off"></div>

@@ -181,9 +181,9 @@ select { width: auto; font-size: 14px; min-height: 36px; padding: 4px 8px; }
 
 /* Réglages */
 .sync-st { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 99px; background: var(--field); color: var(--muted); }
-.sync-st.ok { background: var(--good-soft); color: var(--good); }
-.sync-st.error { background: var(--warn-soft); color: var(--bad); }
-.sync-st.offline { background: var(--warn-soft); color: var(--warn); }
+.sync-st.st-ok { background: var(--good-soft); color: var(--good); }
+.sync-st.st-error { background: var(--warn-soft); color: var(--bad); }
+.sync-st.st-offline { background: var(--warn-soft); color: var(--warn); }
 .qr { background: #fff; padding: 12px; border-radius: 12px; margin: 12px auto; max-width: 260px; }
 .qr svg { width: 100%; height: auto; display: block; }
 .help { margin-top: 12px; font-size: 14px; }
