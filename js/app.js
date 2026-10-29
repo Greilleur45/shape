@@ -2,6 +2,7 @@ import * as P from './program.js';
 import * as store from './store.js';
 import * as sync from './sync.js';
 import { lineChart, barChart, bindTips } from './charts.js';
+import { GUIDE, imgUrls, ALL_IMAGES } from './guide.js';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -256,6 +257,7 @@ function renderExercise(date, it, label) {
     <div class="ex-h">
       <span class="ex-i">${complete ? I.check.replace('<svg', '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"') : label}</span>
       <span class="ex-n">${esc(it.name)}</span>
+      ${GUIDE[it.id] ? `<button class="guide-btn" data-act="guide" data-ex="${it.id}" aria-label="Voir le geste"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.5v5l4.5-2.5z"/></svg><span>Geste</span></button>` : ''}
     </div>
     <div class="ex-m">${muscleTag(it.id)}<span class="tag">${it.sets} × ${esc(it.reps)}</span>${rest ? `<span class="tag">⏱ ${rest}</span>` : ''}
       ${tech ? `<button class="badge" data-act="tech">${tech.label} ⓘ</button>` : ''}</div>
@@ -386,6 +388,51 @@ function renderMeasures(date) {
     <button class="chk ${m.photos ? 'on' : ''}" data-act="photos"><span class="box">${I.check}</span>📸 Photos faites (face, profil, dos)</button>
   </section>`;
 }
+
+// ---------- Fiche « geste » ----------
+function openGuide(id) {
+  const g = GUIDE[id];
+  if (!g) return;
+  const name = findName(id);
+  const pics = imgUrls(id);
+  const labels = id === 'geante-abdos' ? ['Crunch poulie', 'Relevés de jambes', 'Woodchopper'] : id === 'geante-obliques' ? ['Pallof press', 'Woodchopper', 'Gainage latéral'] : null;
+  const sheet = $('#sheet');
+  sheet.innerHTML = `
+    <div class="sh-back" data-act="sheet-close"></div>
+    <div class="sh-panel" role="dialog" aria-modal="true" aria-label="${esc(name)}">
+      <div class="sh-grab"></div>
+      <div class="sh-h"><div>${muscleTag(id)}<h2>${esc(name)}</h2></div>
+        <button class="icon" data-act="sheet-close" aria-label="Fermer">${I.x}</button></div>
+      ${pics.map(([a, b], i) => `
+        <figure class="anim">
+          <img src="${a}" alt="Position de départ" loading="lazy"><img class="b" src="${b}" alt="Position d'arrivée" loading="lazy">
+          <figcaption><span class="ph-a">Départ</span><span class="ph-b">Arrivée</span>${labels ? `<b>${labels[i]}</b>` : ''}</figcaption>
+        </figure>`).join('')}
+      ${g.note ? `<p class="sh-note">ℹ️ ${esc(g.note)}</p>` : ''}
+      <div class="sh-block"><h3>⚙️ Réglage</h3><p>${esc(g.setup)}</p></div>
+      <div class="sh-block"><h3>🎯 Exécution</h3><ol>${g.steps.map(x => `<li>${esc(x)}</li>`).join('')}</ol></div>
+      ${g.tip ? `<div class="sh-tip">💡 ${esc(g.tip)}</div>` : ''}
+      <p class="sh-credit">Photos : free-exercise-db (domaine public)</p>
+    </div>`;
+  sheet.hidden = false;
+  document.body.classList.add('noscroll');
+  requestAnimationFrame(() => sheet.classList.add('open'));
+}
+function closeGuide() {
+  const sheet = $('#sheet');
+  if (sheet.hidden) return;
+  sheet.classList.remove('open');
+  document.body.classList.remove('noscroll');
+  setTimeout(() => { sheet.hidden = true; sheet.innerHTML = ''; }, 320);
+}
+function findName(id) {
+  for (const b of [1, 5, 11]) for (const t of ['HA', 'BA', 'HB', 'BB']) {
+    const it = P.workoutFor(t, b).items.find(x => x.id === id);
+    if (it) return it.name;
+  }
+  return id;
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeGuide(); });
 
 // ---------- Vue Programme ----------
 const PH_COLORS = { 1: '#22d3ee', 2: '#7c5cff', 3: '#ff4f6d' };
@@ -667,7 +714,7 @@ function renderSettings() {
 
 // ---------- Rendu ----------
 function applyMeter(el, p) {
-  if (el.tagName === 'circle') el.style.strokeDashoffset = String(100 - p * 100);
+  if (el.tagName === 'circle') { el.style.strokeDashoffset = String(100 - p * 100); el.style.opacity = p > 0 ? 1 : 0; }
   else el.style.width = `${p * 100}%`;
 }
 function countUp(el) {
@@ -816,6 +863,8 @@ document.addEventListener('click', e => {
     }
     case 'cal-today': state.calWeek = null; return render({ anim: true });
     case 'show-meas': state.showMeas = true; break;
+    case 'guide': openGuide(ds.ex); return;
+    case 'sheet-close': closeGuide(); return;
     case 'tech': { const d = b.closest('.ex').querySelector('.tech-d'); d.hidden = !d.hidden; return; }
     case 'ok': {
       const before = snapshotProgress(ds.ex);
@@ -972,3 +1021,9 @@ let lastToday = today();
 setInterval(() => { const t = today(); if (t !== lastToday) { if (state.date === lastToday) { state.date = t; render(); } lastToday = t; } }, 60000);
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+// Met en cache toutes les photos d'exercices pour qu'elles marchent hors ligne à la salle
+if ('caches' in window && navigator.onLine) {
+  setTimeout(() => caches.open('shape-img-v1').then(async c => {
+    for (const u of ALL_IMAGES) if (!(await c.match(u))) await c.add(u).catch(() => {});
+  }), 4000);
+}

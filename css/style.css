@@ -523,6 +523,54 @@ input:focus, select:focus { outline: none; border-color: var(--acc1); box-shadow
   .page-plan > .card:nth-child(3) { margin-top: 0; }
 }
 
+/* ============ Fiche geste ============ */
+.guide-btn {
+  flex: none; display: inline-flex; align-items: center; gap: 5px; height: 32px; padding: 0 10px 0 8px; border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--acc2) 40%, transparent); background: color-mix(in srgb, var(--acc2) 12%, transparent);
+  color: var(--acc2); font-size: 12px; font-weight: 700; transition: transform .15s var(--ease);
+}
+.guide-btn:active { transform: scale(.92); }
+.guide-btn svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
+.guide-btn svg path { fill: currentColor; stroke: none; }
+body.noscroll { overflow: hidden; }
+#sheet { position: fixed; inset: 0; z-index: 50; }
+#sheet[hidden] { display: none; }
+.sh-back { position: absolute; inset: 0; background: rgba(5, 6, 12, .55); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); opacity: 0; transition: opacity .3s; }
+.sh-panel {
+  position: absolute; left: 0; right: 0; bottom: 0; max-height: 92vh; overflow-y: auto; overscroll-behavior: contain;
+  background: var(--card); border: 1px solid var(--line2); border-radius: 26px 26px 0 0; padding: 8px 16px calc(env(safe-area-inset-bottom) + 20px);
+  transform: translateY(100%); transition: transform .38s var(--ease); box-shadow: 0 -20px 60px rgba(0, 0, 0, .4);
+}
+#sheet.open .sh-back { opacity: 1; }
+#sheet.open .sh-panel { transform: none; }
+.sh-grab { width: 42px; height: 5px; border-radius: 3px; background: var(--line2); margin: 2px auto 10px; }
+.sh-h { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+.sh-h h2 { font-family: var(--display); font-size: 20px; margin: 6px 0 0; line-height: 1.2; }
+.anim { position: relative; margin: 0 0 12px; border-radius: 18px; overflow: hidden; background: #111; aspect-ratio: 3 / 2; }
+.anim img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.anim img.b { animation: flip 2.6s ease-in-out infinite; }
+@keyframes flip { 0%, 35% { opacity: 0; } 50%, 85% { opacity: 1; } 100% { opacity: 0; } }
+.anim figcaption { position: absolute; left: 10px; right: 10px; bottom: 10px; display: flex; gap: 6px; align-items: center; }
+.anim figcaption span { font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: 3px 8px; border-radius: 99px; background: rgba(0, 0, 0, .55); color: #fff; }
+.anim .ph-a { animation: phA 2.6s ease-in-out infinite; } .anim .ph-b { animation: phB 2.6s ease-in-out infinite; }
+@keyframes phA { 0%, 35% { background: var(--acc1); } 50%, 85% { background: rgba(0, 0, 0, .55); } 100% { background: var(--acc1); } }
+@keyframes phB { 0%, 35% { background: rgba(0, 0, 0, .55); } 50%, 85% { background: var(--acc1); } 100% { background: rgba(0, 0, 0, .55); } }
+.anim figcaption b { margin-left: auto; font-size: 12px; color: #fff; background: rgba(0, 0, 0, .55); padding: 3px 9px; border-radius: 99px; }
+.sh-note { font-size: 12.5px; color: var(--ink2); margin: -4px 0 12px; }
+.sh-block { background: var(--card2); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; margin: 10px 0; }
+.sh-block h3 { margin: 0 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--accent); }
+.sh-block p { margin: 0; }
+.sh-block ol { margin: 0; padding-left: 20px; }
+.sh-block li { margin: 5px 0; }
+.sh-tip { background: var(--acc-soft); border: 1px solid color-mix(in srgb, var(--acc1) 25%, transparent); border-radius: 16px; padding: 12px 14px; font-size: 14px; }
+.sh-credit { font-size: 11px; color: var(--muted); text-align: center; margin: 14px 0 0; }
+@media (min-width: 1000px) {
+  .sh-panel { left: 50%; right: auto; bottom: auto; top: 50%; width: min(760px, 90vw); max-height: 88vh; border-radius: 26px; padding: 16px 24px 24px;
+    transform: translate(-50%, -46%) scale(.96); opacity: 0; transition: transform .35s var(--ease), opacity .3s; }
+  #sheet.open .sh-panel { transform: translate(-50%, -50%); opacity: 1; }
+  .sh-grab { display: none; }
+}
+
 /* ============ Ordinateur : pleine largeur ============ */
 @media (min-width: 1000px) {
   body { padding: 0 0 32px 104px; }
